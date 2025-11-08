@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String
+  phone         String       @unique
+  phoneVerified Boolean      @default(false)
+  noShowCount   Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  participants  Participant[]
+}
+
+model Group {
+  id             String       @id @default(cuid())
+  title          String
+  product        String
+  totalQty       Float
+  unitQty        Float
+  totalMembers   Int
+  minMembers     Int          @default(2)
+  deadline       DateTime
+  status         String       @default("recruiting") // recruiting, closed, confirmed, cancelled
+  pickupLocation String
+  pickupTime     DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  participants   Participant[]
+}
+
+model Participant {
+  id         String   @id @default(cuid())
+  userId     String
+  groupId    String
+  paidStatus String   @default("pending") // pending, paid, confirmed
+  noShow     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([groupId])
+  @@index([userId])
+}
